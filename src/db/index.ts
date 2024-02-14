@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
-require("dotenv").config(); // Make sure to require dotenv at the top
+import dotenv from "dotenv";
 
+dotenv.config(); // Load environment variables
 const mongoDBUri = process.env.MONGODB_URI; // Accessing the MongoDB URI from .env variables
 if (!mongoDBUri) {
   throw new Error(

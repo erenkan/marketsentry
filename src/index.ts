@@ -1,4 +1,6 @@
-require("dotenv").config(); // Make sure to require dotenv at the top
+import dotenv from "dotenv";
+
+dotenv.config(); // Load environment variables
 
 import {
   deleteAllProductsForUser,
@@ -8,9 +10,9 @@ import {
   saveProductDetails,
 } from "./db";
 
-const TelegramBot = require("node-telegram-bot-api");
-const { MediaMarktScraper } = require("./scrapper/mediaMarktScapper");
-const token = process.env.TELEGRAM_BOT_TOKEN;
+import TelegramBot, { Message } from "node-telegram-bot-api";
+import { MediaMarktScraper } from "./scrapper/mediaMarktScapper";
+const token = process.env.TELEGRAM_BOT_TOKEN || ""; // Ensure token is defined
 const bot = new TelegramBot(token, { polling: true });
 
 // bot.on("message", async (msg: { chat: { id: any }; text: any }) => {
@@ -69,19 +71,19 @@ bot.onText(/\/end/, (msg: { chat: { id: any } }) => {
   bot.sendMessage(chatId, "Stopped monitoring products.");
 });
 
-bot.onText(/\/add/, (msg: { chat: { id: any }; text: any }) => {
+bot.onText(/\/add/, (msg: Message) => {
   const chatId = msg.chat.id;
-  const productName = msg.text.split(" ")[1];
+  const productName = (msg.text ?? "").split(" ")[1];
   addProductToMonitor(chatId, productName);
 });
 
-bot.onText(/\/remove/, (msg: { chat: { id: any }; text: any }) => {
+bot.onText(/\/remove/, (msg: Message) => {
   const chatId = msg.chat.id;
-  const productName = msg.text.split(" ")[1];
+  const productName = (msg.text ?? "").split(" ")[1];
   removeProductFromMonitor(chatId, productName);
 });
 
-bot.onText(/\/list/, async (msg: { chat: { id: any } }) => {
+bot.onText(/\/list/, async (msg: Message) => {
   const chatId = msg.chat.id;
   const products = await getProductsToMonitor(chatId);
   if (products.length === 0) {
@@ -97,13 +99,13 @@ bot.onText(/\/list/, async (msg: { chat: { id: any } }) => {
   }
 });
 
-bot.onText(/\/clear/, async (msg: { chat: { id: any } }) => {
-  const chatId = msg.chat.id;
+bot.onText(/\/clear/, async (msg: Message) => {
+  const chatId = msg.chat.id.toString(); // Convert chatId to string
   await deleteAllProductsForUser(chatId);
   bot.sendMessage(chatId, "All products removed from database.");
 });
 
-bot.onText(/\/help/, (msg: { chat: { id: any } }) => {
+bot.onText(/\/help/, (msg: Message) => {
   const chatId = msg.chat.id;
   const message = `Commands:
   /monitor - Start monitoring products

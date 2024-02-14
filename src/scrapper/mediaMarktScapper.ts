@@ -48,11 +48,6 @@ export class MediaMarktScraper {
       price,
       url,
     };
-
-    console.log(`In Stock: ${inStock}`);
-    console.log(`Product: ${productName}`);
-    console.log(`Price: ${price}`);
-    console.log(`URL: ${url}`);
   }
 
   public async close(): Promise<void> {
