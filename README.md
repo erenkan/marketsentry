@@ -39,7 +39,22 @@ MarketMate is a Telegram bot designed to help users track the prices and availab
     TELEGRAM_BOT_TOKEN=<your-telegram-bot-token>
     MONGODB_URI=<your-mongodb-uri>
    ```
-4. Start the bot:
+4. Build the project:
    ```bash
-   yarn start
+   yarn build
    ```
+5. Start the bot:
+   ```bash
+    yarn start
+   ```
+6. Here are the commands you can use to interact with the bot:
+
+```bash
+/start - Start the bot
+/monitor - Start monitoring products
+/end - Stop monitoring products
+/add [product name] - Add product to monitor
+/remove [product name] - Remove product from monitor
+/list - List products being monitored
+/help - Show help message
+```
