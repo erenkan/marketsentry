@@ -1,6 +1,6 @@
-# MarketMate: Track Product Prices and Availability
+# MarketSentry: Track Product Prices and Availability
 
-MarketMate is a Telegram bot designed to help users track the prices and availability of products on MediaMarkt. Using Playwright for web scraping and MongoDB for data storage, MarketMate offers real-time notifications and price comparison to ensure you never miss a deal.
+MarketSentry is a Telegram bot designed to help users track the prices and availability of products on MediaMarkt. Using Playwright for web scraping and MongoDB for data storage, MarketSentry offers real-time notifications and price comparison to ensure you never miss a deal.
 
 ## Features
 
