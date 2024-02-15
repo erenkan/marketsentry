@@ -20,7 +20,7 @@ interface IProductDetails extends Document {
   price: number;
   oldPrice?: number;
   url: string;
-  userId: string;
+  chatId: number;
 }
 
 const ProductDetailsSchema: Schema = new Schema({
@@ -29,7 +29,7 @@ const ProductDetailsSchema: Schema = new Schema({
   price: { type: Number, required: true },
   oldPrice: { type: Number },
   url: { type: String, required: true },
-  userId: { type: String, required: true },
+  chatId: { type: Number, required: true },
 });
 
 const ProductDetails = mongoose.model<IProductDetails>(
@@ -45,7 +45,7 @@ export const saveProductDetails = async (details: IProductDetails) => {
 export const saveOrUpdateProductDetails = async (details: IProductDetails) => {
   const existingDetails = await ProductDetails.findOne({
     productName: details.productName,
-    userId: details.userId,
+    chatId: details.chatId,
   });
 
   if (existingDetails) {
@@ -58,6 +58,17 @@ export const saveOrUpdateProductDetails = async (details: IProductDetails) => {
       // Here, you could also implement sending a notification to the user about the price change
       return "priceUpdated"; // Indicate that the price was updated
     }
+
+    if (existingDetails.inStock !== details.inStock) {
+      // In stock status has changed
+      await ProductDetails.updateOne(
+        { _id: existingDetails._id },
+        { $set: { inStock: details.inStock } }
+      );
+      // Here, you could also implement sending a notification to the user about the in stock status change
+      return "inStockUpdated"; // Indicate that the in stock status was updated
+    }
+
     return "noChange"; // Indicate no change in price
   } else {
     // No existing record, save a new one
@@ -67,23 +78,19 @@ export const saveOrUpdateProductDetails = async (details: IProductDetails) => {
   }
 };
 
-export const getProductDetailsByProductName = async (productName: string) => {
-  return ProductDetails.find({ productName });
-};
-
-export const getProductDetailsByUser = async (userId: string) => {
-  return ProductDetails.find({ userId });
+export const getProductDetailsByUser = async (chatId: number) => {
+  return ProductDetails.find({ chatId });
 };
 
 export const deleteProductFromMonitor = async (
   productName: string,
-  userId: string
+  chatId: string
 ) => {
-  const result = await ProductDetails.deleteOne({ productName, userId });
+  const result = await ProductDetails.deleteOne({ productName, chatId });
   return result;
 };
 
-export const deleteAllProductsForUser = async (userId: string) => {
-  const result = await ProductDetails.deleteMany({ userId });
+export const deleteAllProductsForUser = async (chatId: number) => {
+  const result = await ProductDetails.deleteMany({ chatId });
   return result;
 };

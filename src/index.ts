@@ -15,57 +15,15 @@ import { MediaMarktScraper } from "./scrapper/mediaMarktScapper";
 const token = process.env.TELEGRAM_BOT_TOKEN || ""; // Ensure token is defined
 const bot = new TelegramBot(token, { polling: true });
 
-// bot.on("message", async (msg: { chat: { id: any }; text: any }) => {
-//   const chatId = msg.chat.id;
-//   const productName = msg.text; // Assuming the message is the product name
-
-//   const scraper = new MediaMarktScraper();
-//   try {
-//     const productDetails = await scraper.searchForProduct(productName);
-//     console.log(productDetails);
-//     if (productDetails !== undefined) {
-//       // return the product details to the user with good formatting and ui
-//       const updateStatus = await updateProductDetails({
-//         ...productDetails,
-//         userId: chatId.toString(), // Assuming chatId is unique per user
-//       });
-
-//       const message = `Product Name: ${productDetails.productName}
-//       \nIn Stock: ${productDetails.inStock ? "Yes" : "No"}
-//       \nPrice: ${productDetails.price}\nLink: ${productDetails.url}`;
-
-//       // Handle different cases based on updateStatus
-//       if (updateStatus === "newRecord") {
-//         bot.sendMessage(chatId, message);
-//       } else if (updateStatus === "priceUpdated") {
-//         bot.sendMessage(chatId, `Price updated! ${message}`);
-//       } else {
-//         // No change in price or product not found
-//         bot.sendMessage(
-//           chatId,
-//           `No price change detected for '${productName}'.`
-//         );
-//       }
-//     } else {
-//       bot.sendMessage(chatId, `The product '${productName}' was not found.`);
-//     }
-//   } catch (error) {
-//     bot.sendMessage(chatId, "An error occurred during the scraping process.");
-//   } finally {
-//     await scraper.close();
-//   }
-// });
-
 // Start monitoring on a command like /start or /monitor
 bot.onText(/\/monitor/, (msg: { chat: { id: any } }) => {
   const chatId = msg.chat.id;
-  // const chatId = msg.chat.id;
-  // setInterval(monitorProducts, 3 * 60 * 1000); // Adjust time as needed
+  setInterval(() => monitorProducts(chatId), 1 * 60 * 1000); // Adjust time as needed
   bot.sendMessage(chatId, "Started monitoring products...");
 });
 
 // Stop monitoring on a command like /stop or /end
-bot.onText(/\/end/, (msg: { chat: { id: any } }) => {
+bot.onText(/\/end/, (msg: Message) => {
   const chatId = msg.chat.id;
   // clearInterval(monitorProducts);
   bot.sendMessage(chatId, "Stopped monitoring products.");
@@ -100,7 +58,7 @@ bot.onText(/\/list/, async (msg: Message) => {
 });
 
 bot.onText(/\/clear/, async (msg: Message) => {
-  const chatId = msg.chat.id.toString(); // Convert chatId to string
+  const chatId = msg.chat.id; // Convert chatId to string
   await deleteAllProductsForUser(chatId);
   bot.sendMessage(chatId, "All products removed from database.");
 });
@@ -119,24 +77,29 @@ bot.onText(/\/help/, (msg: Message) => {
 
 // Monitor products
 
-async function monitorProducts(chatId: any) {
+async function monitorProducts(chatId: number) {
   const products = await getProductsToMonitor(chatId);
   for (const product of products) {
     const scraper = new MediaMarktScraper();
     try {
-      const productDetails = await scraper.searchForProduct(
-        product.productName
-      );
+      const productDetails = await scraper.getProductDetailsByUrl(product.url);
       if (productDetails !== undefined) {
         const updateStatus = await saveOrUpdateProductDetails({
           ...productDetails,
-          userId: product.userId,
+          chatId: product.chatId,
         });
         if (updateStatus === "priceUpdated") {
           // Send notification to user about price change
           bot.sendMessage(
-            product.userId,
+            product.chatId,
             `Price updated for '${product.productName}'! New price: ${productDetails.price}`
+          );
+        }
+        if (updateStatus === "inStockUpdated") {
+          // Send notification to user about in stock status change
+          bot.sendMessage(
+            product.chatId,
+            `In stock status updated for '${product.productName}'!`
           );
         }
       }
@@ -150,18 +113,18 @@ async function monitorProducts(chatId: any) {
 
 // Add product to monitor
 
-async function addProductToMonitor(chatId: any, productName: string) {
+async function addProductToMonitor(chatId: any, productUrl: string) {
   const scraper = new MediaMarktScraper();
   try {
-    const productDetails = await scraper.searchForProduct(productName);
+    const productDetails = await scraper.getProductDetailsByUrl(productUrl);
     if (productDetails !== undefined) {
       await saveProductDetails({
         ...productDetails,
-        userId: chatId.toString(),
+        chatId: chatId.toString(),
       });
-      bot.sendMessage(chatId, `Product '${productName}' added to database.`);
+      bot.sendMessage(chatId, `Product '${productUrl}' added to database.`);
     } else {
-      bot.sendMessage(chatId, `The product '${productName}' was not found.`);
+      bot.sendMessage(chatId, `The product '${productUrl}' was not found.`);
     }
   } catch (error) {
     bot.sendMessage(chatId, "An error occurred during the scraping process.");
@@ -187,6 +150,6 @@ async function removeProductFromMonitor(chatId: any, productName: string) {
   }
 }
 
-async function getProductsToMonitor(chatId: any) {
-  return await getProductDetailsByUser(chatId.toString());
+async function getProductsToMonitor(chatId: number) {
+  return await getProductDetailsByUser(chatId);
 }
