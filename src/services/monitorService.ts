@@ -34,8 +34,16 @@ export async function monitorProducts(chatId: number) {
             message: `In stock status updated for '${product.productName}'!`,
           });
         }
+
+        if (updateStatus === "noChange") {
+          botEventEmitter.emit("noChange", {
+            chatId,
+            message: `No change in price or in stock status for '${product.productName}'!`,
+          });
+        }
       }
     } catch (error) {
+      console.error(error); // Log error
       // Log error
     } finally {
       await scraper.close();

@@ -18,31 +18,23 @@ import { getProductsToMonitor } from "../services/productService";
 const token = process.env.TELEGRAM_BOT_TOKEN || ""; // Ensure token is defined
 const bot = new TelegramBot(token, { polling: true });
 
-botEventEmitter.on("priceChange", ({ chatId, message }) => {
-  bot.sendMessage(chatId, message);
-});
-
-botEventEmitter.on("inStockChange", ({ chatId, message }) => {
-  bot.sendMessage(chatId, message);
-});
-
-botEventEmitter.on("productAdded", ({ chatId, message }) => {
-  bot.sendMessage(chatId, message);
-});
-
-botEventEmitter.on("productRemoved", ({ chatId, message }) => {
-  bot.sendMessage(chatId, message);
-});
-
-botEventEmitter.on("productNotFound", ({ chatId, message }) => {
-  bot.sendMessage(chatId, message);
-});
-
-botEventEmitter.on("error", ({ chatId, message }) => {
-  bot.sendMessage(chatId, message);
-});
+const events = [
+  "priceChange",
+  "inStockChange",
+  "noChange",
+  "productAdded",
+  "productRemoved",
+  "productNotFound",
+  "error",
+  "monitorStarted",
+];
 
 export const setupBotCommands = () => {
+  events.map((event) =>
+    botEventEmitter.on(event, ({ chatId, message }) => {
+      bot.sendMessage(chatId, message);
+    })
+  );
   // Start monitoring on a command like /start or /monitor
   bot.onText(/\/monitor/, (msg: { chat: { id: any } }) => {
     const chatId = msg.chat.id;
