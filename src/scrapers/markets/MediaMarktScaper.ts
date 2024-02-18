@@ -6,6 +6,7 @@ export class MediaMarktScraper {
 
   public async init(): Promise<void> {
     this.browser = await chromium.launch({ headless: true });
+    console.log("Browser launched");
     this.page = await this.browser.newPage();
   }
 
